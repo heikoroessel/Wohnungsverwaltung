@@ -1,0 +1,149 @@
+/* Design-Token-System: "Aktenregister" — ein ruhiges, archivarisches Erscheinungsbild.
+   Passend zum Thema: Dokumente, Belege, Objektakten. Ledger-artige Tabellen,
+   Aktenreiter-Navigation, Zahlen in Mono für buchhalterische Klarheit. */
+
+:root {
+  --paper: #F6F3EC;
+  --paper-raised: #FDFCF9;
+  --ink: #24272B;
+  --ink-soft: #565952;
+  --line: #D9D3C4;
+  --line-strong: #B7AF98;
+  --verdigris: #3D6B5C;
+  --verdigris-soft: #E4EDE9;
+  --brass: #A8823C;
+  --brass-soft: #F2E9D4;
+  --danger: #9C4438;
+  --danger-soft: #F3E2DE;
+
+  --font-display: 'Lora', Georgia, serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+
+  --radius: 3px;
+  --shadow-card: 0 1px 2px rgba(36,39,43,0.06), 0 1px 0 rgba(36,39,43,0.04);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.4em;
+}
+
+h1 { font-size: 1.9rem; }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 1.05rem; }
+
+a { color: var(--verdigris); }
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line-strong);
+  background: var(--paper-raised);
+  color: var(--ink);
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  transition: border-color .15s, background .15s;
+}
+.btn:hover { border-color: var(--verdigris); }
+.btn:focus-visible { outline: 2px solid var(--verdigris); outline-offset: 2px; }
+
+.btn-primary {
+  background: var(--verdigris);
+  border-color: var(--verdigris);
+  color: #fff;
+}
+.btn-primary:hover { background: #345D50; }
+
+.btn-danger {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+input, select, textarea {
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  padding: 7px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+  color: var(--ink);
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--verdigris);
+  outline-offset: 1px;
+  border-color: var(--verdigris);
+}
+label { font-size: 0.82rem; color: var(--ink-soft); display: block; margin-bottom: 3px; }
+
+.field { margin-bottom: 12px; }
+
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+}
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--line-strong);
+  padding: 6px 10px;
+}
+td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+tr:last-child td { border-bottom: none; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.badge-ok { background: var(--verdigris-soft); color: var(--verdigris); }
+.badge-warn { background: var(--brass-soft); color: var(--brass); }
+.badge-error { background: var(--danger-soft); color: var(--danger); }
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.checkbox-row input[type="checkbox"] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--verdigris); }
