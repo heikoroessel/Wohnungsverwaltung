@@ -30,7 +30,54 @@ router.get('/vorauswahl', async (req, res, next) => {
       [objekt_id, jahr, mieter_id]
     );
 
-    res.json(abschnitte.map((a) => ({ ...a, vorausgewaehlt: a.fuer_mieter_geeignet })));
+    // Zahlen-Vorschlag aus den bereits extrahierten Daten ableiten, statt den Nutzer blank tippen zu lassen.
+    // Gesamtkosten: aus der jahresabrechnung (Objekt-Summe) plus, falls für den Mieter separat erfasst,
+    // dessen Techem-/DomoTherm-Anteil (der ja Teil der umlagefähigen Kosten ist und in "gesamtkosten"
+    // der Jahresabrechnung meist bereits mit drinsteckt – daher nur EINE der beiden Quellen nehmen,
+    // priorisiert die mieterspezifische, sonst die objektweite).
+    let gesamtkostenVorschlag = null;
+    const jahresabrechnungMieterspezifisch = abschnitte.find(
+      (a) => a.mieter_id == mieter_id && a.extrahierte_daten?.gesamtkosten != null
+    );
+    const jahresabrechnungObjektweit = abschnitte.find(
+      (a) => a.abschnittstyp === 'jahresabrechnung' && a.extrahierte_daten?.gesamtkosten != null
+    );
+    const techemDomotherm = abschnitte.find(
+      (a) => ['techem', 'domotherm'].includes(a.abschnittstyp) &&
+        (a.extrahierte_daten?.heizkosten != null || a.extrahierte_daten?.gesamtkosten != null)
+    );
+    if (jahresabrechnungMieterspezifisch) {
+      gesamtkostenVorschlag = jahresabrechnungMieterspezifisch.extrahierte_daten.gesamtkosten;
+    } else if (jahresabrechnungObjektweit) {
+      gesamtkostenVorschlag = jahresabrechnungObjektweit.extrahierte_daten.gesamtkosten;
+    }
+    // Heiz-/Wasserkosten aus Techem/DomoTherm addieren, falls sie nicht schon in der Jahresabrechnung
+    // des Mieters mit drinstecken (Heuristik: nur addieren, wenn die Jahresabrechnung objektweit war,
+    // nicht mieterspezifisch, da objektweite Summen die individuellen Heizkosten meist NICHT enthalten).
+    if (techemDomotherm && !jahresabrechnungMieterspezifisch) {
+      const heiz = Number(techemDomotherm.extrahierte_daten?.heizkosten || 0);
+      const ww = Number(techemDomotherm.extrahierte_daten?.warmwasserkosten || 0);
+      const kw = Number(techemDomotherm.extrahierte_daten?.kaltwasserkosten || 0);
+      const summe = heiz + ww + kw;
+      if (summe > 0) gesamtkostenVorschlag = (gesamtkostenVorschlag || 0) + summe;
+    }
+
+    // Vorauszahlung: aktuelle monatliche NK-Vorauszahlung des Mieters × 12 als Default-Annahme
+    const { rows: mRows } = await pool.query('SELECT aktuelle_nk_vorauszahlung FROM mieter WHERE id=$1', [mieter_id]);
+    const vorauszahlungVorschlag = mRows[0]?.aktuelle_nk_vorauszahlung
+      ? Number(mRows[0].aktuelle_nk_vorauszahlung) * 12
+      : null;
+
+    res.json({
+      abschnitte: abschnitte.map((a) => ({ ...a, vorausgewaehlt: a.fuer_mieter_geeignet })),
+      vorschlag: {
+        gesamtkosten: gesamtkostenVorschlag,
+        vorauszahlung_gesamt: vorauszahlungVorschlag,
+        hinweis: gesamtkostenVorschlag == null
+          ? 'Keine Gesamtkosten in den extrahierten Dokumenten gefunden – bitte manuell prüfen/eintragen.'
+          : 'Automatisch aus den hochgeladenen Dokumenten ermittelt – bitte kurz gegenprüfen.',
+      },
+    });
   } catch (err) { next(err); }
 });
 

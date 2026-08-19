@@ -11,6 +11,7 @@ export default function NebenkostenPage() {
   const [ausgewaehlt, setAusgewaehlt] = useState(new Set());
   const [gesamtkosten, setGesamtkosten] = useState('');
   const [vorauszahlung, setVorauszahlung] = useState('');
+  const [vorschlagHinweis, setVorschlagHinweis] = useState(null);
   const [ergebnis, setErgebnis] = useState(null);
   const [fehler, setFehler] = useState(null);
 
@@ -26,9 +27,12 @@ export default function NebenkostenPage() {
     setFehler(null);
     setErgebnis(null);
     try {
-      const daten = await api.get(`/nk-abrechnung/vorauswahl?objekt_id=${objektId}&mieter_id=${mieterId}&jahr=${jahr}`);
-      setVorauswahl(daten);
-      setAusgewaehlt(new Set(daten.filter((d) => d.vorausgewaehlt).map((d) => d.id)));
+      const res = await api.get(`/nk-abrechnung/vorauswahl?objekt_id=${objektId}&mieter_id=${mieterId}&jahr=${jahr}`);
+      setVorauswahl(res.abschnitte);
+      setAusgewaehlt(new Set(res.abschnitte.filter((d) => d.vorausgewaehlt).map((d) => d.id)));
+      setGesamtkosten(res.vorschlag.gesamtkosten ?? '');
+      setVorauszahlung(res.vorschlag.vorauszahlung_gesamt ?? '');
+      setVorschlagHinweis(res.vorschlag.hinweis);
     } catch (err) { setFehler(err.message); }
   };
 
@@ -109,13 +113,16 @@ export default function NebenkostenPage() {
             </label>
           ))}
 
-          <div className="grid-2" style={{ marginTop: 16 }}>
+          {vorschlagHinweis && (
+            <p style={{ fontSize: '0.82rem', color: 'var(--ink-soft)', marginTop: 14 }}>{vorschlagHinweis}</p>
+          )}
+          <div className="grid-2" style={{ marginTop: 8 }}>
             <div className="field">
-              <label>Gesamtkosten (EUR)</label>
+              <label>Gesamtkosten (EUR) — automatisch ermittelt, bei Bedarf korrigieren</label>
               <input type="number" step="0.01" value={gesamtkosten} onChange={(e) => setGesamtkosten(e.target.value)} />
             </div>
             <div className="field">
-              <label>Vorauszahlungen gesamt (EUR)</label>
+              <label>Vorauszahlungen gesamt (EUR) — aus hinterlegter Monats-NK × 12, bei Bedarf korrigieren</label>
               <input type="number" step="0.01" value={vorauszahlung} onChange={(e) => setVorauszahlung(e.target.value)} />
             </div>
           </div>
